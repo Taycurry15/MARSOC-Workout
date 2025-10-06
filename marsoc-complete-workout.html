@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>MARSOC Training Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+            overscroll-behavior: none;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 10px;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            padding: 20px;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .week-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .week-selector {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .date-display {
+            font-size: 14px;
+            color: #b0b0b0;
+        }
+
+        .navigation-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding: 5px 0;
+            scrollbar-width: none;
+        }
+
+        .navigation-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .workout-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .workout-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .exercise-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .exercise-item.completed {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+        }
+
+        .exercise-item.card-exercise {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            margin-left: 20px;
+            margin-bottom: 8px;
+        }
+
+        .exercise-item.card-exercise.completed {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+        }
+
+        .exercise-name {
+            flex: 1;
+            font-size: 16px;
+        }
+
+        .exercise-details {
+            font-size: 14px;
+            color: #b0b0b0;
+            margin-top: 5px;
+        }
+
+        .exercise-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .checkbox.checked {
+            background: #667eea;
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 16px;
+        }
+
+        .movement-card-header {
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .movement-card-content {
+            display: none;
+        }
+
+        .movement-card-content.expanded {
+            display: block;
+        }
+
+        .expand-icon {
+            transition: transform 0.3s;
+        }
+
+        .expand-icon.expanded {
+            transform: rotate(90deg);
+        }
+
+        .timer-section {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .timer-display {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336, #da190b);
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: #b0b0b0;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.1);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s ease;
+        }
+
+        .card-progress {
+            font-size: 14px;
+            color: #b0b0b0;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MARSOC Training Tracker</h1>
+            <div class="week-info">
+                <select class="week-selector" id="weekSelector">
+                    <option value="1">Week 1</option>
+                    <option value="2">Week 2</option>
+                    <option value="3">Week 3</option>
+                    <option value="4">Week 4</option>
+                    <option value="5">Week 5</option>
+                    <option value="6">Week 6</option>
+                    <option value="7">Week 7</option>
+                    <option value="8">Week 8</option>
+                    <option value="9">Week 9</option>
+                    <option value="10">Week 10</option>
+                </select>
+                <div class="date-display" id="dateDisplay"></div>
+            </div>
+        </div>
+
+        <div class="navigation-tabs">
+            <button class="tab active" onclick="switchTab('today')">Today's WOD</button>
+            <button class="tab" onclick="switchTab('timer')">Timer</button>
+        </div>
+
+        <!-- Today's Workout Section -->
+        <div id="today" class="content-section active">
+            <div id="workoutContent"></div>
+        </div>
+
+        <!-- Timer Section -->
+        <div id="timer" class="content-section">
+            <div class="timer-section">
+                <div class="timer-display" id="timerDisplay">00:00:00</div>
+                <div class="timer-controls">
+                    <button class="btn btn-primary" onclick="startTimer()">Start</button>
+                    <button class="btn btn-danger" onclick="stopTimer()">Stop</button>
+                    <button class="btn" onclick="resetTimer()">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="quickSwitch('today')">
+            <span class="nav-icon">💪</span>
+            <span>WOD</span>
+        </button>
+        <button class="nav-item" onclick="quickSwitch('timer')">
+            <span class="nav-icon">⏱️</span>
+            <span>Timer</span>
+        </button>
+    </div>
+
+    <script>
+        // Movement Card exercises
+        const movementCards = {
+            1: {
+                prep: [
+                    { name: "Ankles-Hips-Shoulders", reps: "5 each side (5 count)" },
+                    { name: "Hip bridge", reps: "6" },
+                    { name: "Elbow pushups", reps: "6-8" },
+                    { name: "Birddog", reps: "5 each side" },
+                    { name: "Frog squats", reps: "5" },
+                    { name: "World's greatest stretch", reps: "5 each side" },
+                    { name: "Inchworm", reps: "5" },
+                    { name: "Walking knees", reps: "10 each side" },
+                    { name: "Walking quads", reps: "10 each side" },
+                    { name: "Cradles", reps: "5 each side" },
+                    { name: "Backwards hamstring", reps: "5 each side" },
+                    { name: "High knees", reps: "15 sec" },
+                    { name: "Butt kicks", reps: "15 reps" }
+                ],
+                exercises: [
+                    { name: "Forward Plank", reps: "Hold for 1 minute" },
+                    { name: "Side Plank", reps: "Hold for 30 seconds each side" },
+                    { name: "Push-Ups", reps: "30 reps (2 count)" },
+                    { name: "Side Lunges", reps: "20 reps (alternate legs, 2 count)" },
+                    { name: "Air Squats", reps: "20 reps (2 count, all the way down)" },
+                    { name: "Burpees", reps: "15 reps (6 count)" },
+                    { name: "Side Straddle Hops", reps: "20 reps" },
+                    { name: "Skaters", reps: "30 reps (hold for 2 seconds each leg)" },
+                    { name: "Forward Plank", reps: "Hold for 1 minute" },
+                    { name: "Side Plank", reps: "Hold for 30 seconds each side" },
+                    { name: "Split Jumps", reps: "30 reps (alternate legs, 2 count)" },
+                    { name: "Mountain Climbers", reps: "25 (4 count)" },
+                    { name: "Partner Drags", reps: "4 times, 20 yards each time" },
+                    { name: "Pull-Ups", reps: "2 max sets" }
+                ]
+            },
+            2: {
+                prep: [
+                    { name: "Ankles-Hips-Shoulders", reps: "5 each side (5 count)" },
+                    { name: "Hip bridge", reps: "6" },
+                    { name: "Elbow pushups", reps: "6-8" },
+                    { name: "Birddog", reps: "5 each side" },
+                    { name: "Frog squats", reps: "5" },
+                    { name: "World's greatest stretch", reps: "5 each side" },
+                    { name: "Inchworm", reps: "5" },
+                    { name: "Walking knees", reps: "10 each side" },
+                    { name: "Walking quads", reps: "10 each side" },
+                    { name: "Cradles", reps: "5 each side" },
+                    { name: "Backwards hamstring", reps: "5 each side" },
+                    { name: "High knees", reps: "15 sec" },
+                    { name: "Butt kicks", reps: "15 reps" }
+                ],
+                exercises: [
+                    { name: "Forward Plank", reps: "Hold for 1 minute" },
+                    { name: "Side Plank", reps: "Hold for 30 seconds each side" },
+                    { name: "Push-Ups", reps: "30 reps (2 count)" },
+                    { name: "Lunges w/ rotation to lead leg", reps: "20 reps (each side, 2 count)" },
+                    { name: "Air Squats", reps: "20 reps (2 count, all the way down)" },
+                    { name: "Burpees", reps: "15 reps (6 count)" },
+                    { name: "Side Straddle Hops", reps: "20 reps" },
+                    { name: "Skaters", reps: "30 reps (hold for 2 seconds each leg)" },
+                    { name: "Forward Plank", reps: "Hold for 1 minute" },
+                    { name: "Side Plank", reps: "Hold for 30 seconds each side" },
+                    { name: "Split Jumps", reps: "30 reps (alternate legs, 2 count)" },
+                    { name: "Mountain Climbers", reps: "25 (4 count)" },
+                    { name: "Partner Drags", reps: "4 times, 20 yards each time" },
+                    { name: "Pull-Ups", reps: "2 max sets" }
+                ]
+            },
+            3: {
+                prep: [
+                    { name: "Ankles-Hips-Shoulders", reps: "5 each side (5 count)" },
+                    { name: "Hip bridge", reps: "6" },
+                    { name: "Elbow pushups", reps: "6-8" },
+                    { name: "Birddog", reps: "5 each side" },
+                    { name: "Frog squats", reps: "5" },
+                    { name: "World's greatest stretch", reps: "5 each side" },
+                    { name: "Inchworm", reps: "5" },
+                    { name: "Walking knees", reps: "10 each side" },
+                    { name: "Walking quads", reps: "10 each side" },
+                    { name: "Cradles", reps: "5 each side" },
+                    { name: "Backwards hamstring", reps: "5 each side" },
+                    { name: "High knees", reps: "15 sec" },
+                    { name: "Butt kicks", reps: "15 reps" }
+                ],
+                exercises: [
+                    { name: "Forward Plank", reps: "Hold for 1 minute (2x)" },
+                    { name: "Side Plank", reps: "Hold for 30 seconds each side (2x)" },
+                    { name: "Push-Ups (with ruck)", reps: "20 reps (2 count)" },
+                    { name: "Lunges w/ rotation to lead leg", reps: "10 reps (each side, 2 count)" },
+                    { name: "Ruck Rowing", reps: "20 reps (2 count)" },
+                    { name: "Ruck Thrusters", reps: "15 reps (2 count)" },
+                    { name: "Skaters", reps: "30 reps (each leg, 2 count)" },
+                    { name: "Side Straddle Hops", reps: "20 reps" },
+                    { name: "Split Jumps", reps: "30 reps (alternate legs, 2 count)" },
+                    { name: "Prisoner Jumps", reps: "15 reps" },
+                    { name: "Air Squats with Ruck Overhead", reps: "10 each side (2 count)" },
+                    { name: "20-Yard High Crawl", reps: "4 times" },
+                    { name: "Fireman Carry", reps: "20 yards (switch, repeat 2 times)" },
+                    { name: "Pull-Ups", reps: "2 max sets" }
+                ]
+            },
+            4: {
+                prep: [
+                    { name: "Ankles-Hips-Shoulders", reps: "5 each side (5 count)" },
+                    { name: "Hip bridge", reps: "6" },
+                    { name: "Elbow pushups", reps: "6-8" },
+                    { name: "Birddog", reps: "5 each side" },
+                    { name: "Frog squats", reps: "5" },
+                    { name: "World's greatest stretch", reps: "5 each side" },
+                    { name: "Inchworm", reps: "5" },
+                    { name: "Walking knees", reps: "10 each side" },
+                    { name: "Walking quads", reps: "10 each side" },
+                    { name: "Cradles", reps: "5 each side" },
+                    { name: "Backwards hamstring", reps: "5 each side" },
+                    { name: "High knees", reps: "15 sec" },
+                    { name: "Butt kicks", reps: "15 reps" }
+                ],
+                exercises: [
+                    { name: "Forward Plank", reps: "Hold for 1 minute (2x)" },
+                    { name: "Side Plank", reps: "Hold for 30 seconds each side (2x)" },
+                    { name: "Push-Ups", reps: "35 reps (2 count)" },
+                    { name: "Lunges w/ rotation to lead leg", reps: "30 reps (each side, 2 count)" },
+                    { name: "Burpees", reps: "20 reps (6 count)" },
+                    { name: "Split Jumps", reps: "20 reps (each legs, 2 count)" },
+                    { name: "Mountain Climbers", reps: "25 (4 count)" },
+                    { name: "Side Straddle Hops", reps: "20 reps" },
+                    { name: "Prisoner Jumps", reps: "15 reps" },
+                    { name: "Skaters", reps: "20 reps (hold for 2 seconds each legs)" },
+                    { name: "Forward Plank", reps: "Hold for 1 minute, 5 sec each (2x)" },
+                    { name: "Side Plank", reps: "Hold for 30 seconds, pulse 15 sec (2x)" },
+                    { name: "Partner Drags", reps: "2 times, 20-yards each" }
+                ]
+            }
+        };
+
+        const postWorkoutCard = [
+            { name: "AIS: Calf", reps: "Pull, Relax, 1-10 (each side)" },
+            { name: "AIS: Hamstring", reps: "Pull, Relax, 1-10 (each side)" },
+            { name: "AIS: IT Band", reps: "Pull, Relax, 1-10 (each side)" },
+            { name: "AIS: Groin", reps: "Pull, Relax, 1-10 (each side)" },
+            { name: "AIS: Quadriceps", reps: "Up, Pull, Relax 1-10 (each side)" },
+            { name: "AIS: Triceps", reps: "Down, Relax, 1-10 (both sides)" },
+            { name: "AIS: Rotator Cuff", reps: "Down, Back, 1-10 (both sides)" },
+            { name: "AIS: Quadruped Thoracic Spine", reps: "Count on your own" },
+            { name: "AIS: Middle Back", reps: "Up, Back, 1-10" },
+            { name: "Roller: Calf", reps: "20-30 rolls" },
+            { name: "Roller: Hamstring", reps: "20-30 rolls" },
+            { name: "Roller: IT Band", reps: "20-30 rolls" },
+            { name: "Roller: Quadriceps", reps: "20-30 rolls" },
+            { name: "Roller: Groin", reps: "20-30 rolls" },
+            { name: "Roller: Glute", reps: "20-30 rolls" },
+            { name: "Roller: Middle and Upper Back", reps: "20-30 rolls" },
+            { name: "Roller: Lats", reps: "20-30 rolls" },
+            { name: "Roller: Hip External Rotator", reps: "20-30 rolls" },
+            { name: "Roller: Hip Flexor", reps: "20-30 rolls" },
+            { name: "Roller: Hip Adductor", reps: "20-30 rolls" }
+        ];
+
+        // Full workout program
+        const workoutProgram = {
+            1: {
+                monday: [
+                    { name: "3-mile run", time: true },
+                    { name: "Movement Card #1", card: 1 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                tuesday: [
+                    { name: "3-mile hike", time: "1 hr or less" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                wednesday: [
+                    { name: "Swim 8 x 100s", reps: "Technique focus" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                thursday: [
+                    { name: "Run 4 x 400m", reps: "Mile pace, 2 min rest" },
+                    { name: "Movement Card #1", card: 1 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                friday: [
+                    { name: "Swim 600m", reps: "Work on technique" },
+                    { name: "3 x 5 min tread", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                saturday: [
+                    { name: "4-mile hike", time: "1:20 or less" },
+                    { name: "Assess feet/gear", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                sunday: [
+                    { name: "Rest, stretch, hydrate & recover", reps: "Active recovery" }
+                ]
+            },
+            2: {
+                monday: [
+                    { name: "3-mile run", time: true },
+                    { name: "Movement Card #1", card: 1 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                tuesday: [
+                    { name: "3-mile hike", time: "55 min or less" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                wednesday: [
+                    { name: "Swim 2 x 500s", reps: "Form swims" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                thursday: [
+                    { name: "Run 9 x 200m", reps: "Mile pace, 1 min rest" },
+                    { name: "Movement Card #1", card: 1 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                friday: [
+                    { name: "Swim 700m", reps: "Work on technique" },
+                    { name: "3 x 5 min tread", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                saturday: [
+                    { name: "4-mile hike", time: "1:15 or less" },
+                    { name: "Assess feet/gear", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                sunday: [
+                    { name: "Rest, stretch, hydrate & recover", reps: "Active recovery" }
+                ]
+            },
+            3: {
+                monday: [
+                    { name: "3-mile run (Fartlek)", time: true, note: "Add 3x 200m at 85-90%" },
+                    { name: "Movement Card #1", card: 1 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                tuesday: [
+                    { name: "3-mile hike", time: "50 min or less" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                wednesday: [
+                    { name: "Swim 8 x 100s", reps: "2 min rest after each" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                thursday: [
+                    { name: "Run 4 x 400m", reps: "Mile pace, 2 min rest" },
+                    { name: "Movement Card #2", card: 2 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                friday: [
+                    { name: "Swim 800m", reps: "Work on technique" },
+                    { name: "3 x 5 min tread", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                saturday: [
+                    { name: "5-mile hike", time: "1:30 or less" },
+                    { name: "Assess feet/gear", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                sunday: [
+                    { name: "Rest, stretch, hydrate & recover", reps: "Active recovery" }
+                ]
+            },
+            4: {
+                monday: [
+                    { name: "3-mile run", time: true },
+                    { name: "Movement Card #2", card: 2 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                tuesday: [
+                    { name: "3-mile hike", time: "45 min or less" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                wednesday: [
+                    { name: "Swim 10 x 100s", reps: "Build each 25, rest 1:00" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                thursday: [
+                    { name: "Run 10 x 200m", reps: "Mile pace, 1 min rest" },
+                    { name: "Movement Card #2", card: 2 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                friday: [
+                    { name: "Swim 800m", reps: "Work on technique" },
+                    { name: "3 x 5 min tread", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                saturday: [
+                    { name: "5-mile hike", time: "1:25 or less" },
+                    { name: "Assess feet/gear", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                sunday: [
+                    { name: "Rest, stretch, hydrate & recover", reps: "Active recovery" }
+                ]
+            },
+            5: {
+                monday: [
+                    { name: "3-mile run (Fartlek)", time: true, note: "Add 5x 200m at 85-90%" },
+                    { name: "Movement Card #2", card: 2 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                tuesday: [
+                    { name: "4-mile hike", time: "1:10 or less" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                wednesday: [
+                    { name: "Swim 20 x 50s", reps: "1st 25 form, 2nd 25 fast" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                thursday: [
+                    { name: "Run 3 x 800m", reps: "Mile pace, 3 min rest" },
+                    { name: "Movement Card #2", card: 2 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                friday: [
+                    { name: "Swim 6 x 100m", reps: "Work on technique" },
+                    { name: "4 x 5 min tread", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                saturday: [
+                    { name: "6-mile hike", time: "1:40 or less" },
+                    { name: "Assess feet/gear", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                sunday: [
+                    { name: "Rest, stretch, hydrate & recover", reps: "Active recovery" }
+                ]
+            },
+            6: {
+                monday: [
+                    { name: "3-mile run", time: true },
+                    { name: "Movement Card #3", card: 3 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                tuesday: [
+                    { name: "4-mile hike", time: "1:05 or less" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                wednesday: [
+                    { name: "Swim 10 x 100s", reps: "Odd 25s form, even 25s fast" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                thursday: [
+                    { name: "Run 6 x 400m", reps: "Mile pace, 2 min rest" },
+                    { name: "Movement Card #2", card: 2 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                friday: [
+                    { name: "Swim 7 x 100m", reps: "Work on technique" },
+                    { name: "4 x 5 min tread", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                saturday: [
+                    { name: "7-mile hike", time: "1:55 or less" },
+                    { name: "Assess feet/gear", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                sunday: [
+                    { name: "Rest, stretch, hydrate & recover", reps: "Active recovery" }
+                ]
+            },
+            7: {
+                monday: [
+                    { name: "3-mile run (Fartlek)", time: true, note: "Add 7x 200m at 85-90%" },
+                    { name: "Movement Card #1", card: 1 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                tuesday: [
+                    { name: "4-mile hike", time: "1 hr or less" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                wednesday: [
+                    { name: "Swim 3 x 400s", reps: "Rest 1:00 after each" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                thursday: [
+                    { name: "Run 10 x 200m", reps: "Mile pace, 1 min rest" },
+                    { name: "Movement Card #3", card: 3 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                friday: [
+                    { name: "Swim 8 x 100m", reps: "Work on technique" },
+                    { name: "4 x 5 min tread", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                saturday: [
+                    { name: "8-mile hike", time: "2:15 or less" },
+                    { name: "Assess feet/gear", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                sunday: [
+                    { name: "Rest, stretch, hydrate & recover", reps: "Active recovery" }
+                ]
+            },
+            8: {
+                monday: [
+                    { name: "4-mile run", time: true },
+                    { name: "Movement Card #1", card: 1 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                tuesday: [
+                    { name: "5-mile hike", time: "1:20 or less" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                wednesday: [
+                    { name: "Swim 6 x 200s", reps: "Mix strokes, :30 rest each" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                thursday: [
+                    { name: "Run 4 x 800m", reps: "Mile pace, 3 min rest" },
+                    { name: "Movement Card #3", card: 3 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                friday: [
+                    { name: "Swim 8 x 100m", reps: "Work on technique" },
+                    { name: "4 x 5 min tread", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                saturday: [
+                    { name: "9-mile hike", time: "2:55 or less" },
+                    { name: "Assess feet/gear", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                sunday: [
+                    { name: "Rest, stretch, hydrate & recover", reps: "Active recovery" }
+                ]
+            },
+            9: {
+                monday: [
+                    { name: "4-mile run (Fartlek)", time: true, note: "Add 9x 200m at 85-90%" },
+                    { name: "Movement Card #4", card: 4 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                tuesday: [
+                    { name: "5-mile hike", time: "1:20 or less" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                wednesday: [
+                    { name: "Swim 12 x 100s", reps: "Fast swims, rest 1:00" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                thursday: [
+                    { name: "Run 6 x 400m", reps: "Faster than mile pace" },
+                    { name: "Movement Card #4", card: 4 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                friday: [
+                    { name: "Swim 8 x 100m", reps: "Work on technique" },
+                    { name: "4 x 5 min tread", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                saturday: [
+                    { name: "10-mile hike", time: "3:20 or less" },
+                    { name: "Assess feet/gear", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                sunday: [
+                    { name: "Rest, stretch, hydrate & recover", reps: "Active recovery" }
+                ]
+            },
+            10: {
+                monday: [
+                    { name: "4-mile run", time: true },
+                    { name: "Movement Card #4", card: 4 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                tuesday: [
+                    { name: "5-mile hike", time: "1:15 or less" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                wednesday: [
+                    { name: "Swim 15 x 100s", reps: "Fast swims, rest 1:00" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                thursday: [
+                    { name: "Run 10 x 200m", reps: "Faster than mile pace" },
+                    { name: "Movement Card #4", card: 4 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                friday: [
+                    { name: "Swim 8 x 100m", reps: "Work on technique" },
+                    { name: "4 x 5 min tread", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                saturday: [
+                    { name: "12-mile hike", time: "4:00 or less" },
+                    { name: "Assess feet/gear", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                sunday: [
+                    { name: "Rest, stretch, hydrate & recover", reps: "Active recovery" }
+                ]
+            }
+        };
+
+        // State management
+        let currentWeek = 1;
+        let currentDay = new Date().getDay();
+        let timerInterval = null;
+        let seconds = 0;
+        let workoutData = JSON.parse(localStorage.getItem('marsocWorkouts')) || {};
+
+        // Initialize app
+        function init() {
+            loadCurrentWeek();
+            updateDateDisplay();
+            loadTodayWorkout();
+            
+            document.getElementById('weekSelector').addEventListener('change', function(e) {
+                currentWeek = parseInt(e.target.value);
+                localStorage.setItem('currentWeek', currentWeek);
+                loadTodayWorkout();
+            });
+        }
+
+        function loadCurrentWeek() {
+            const savedWeek = localStorage.getItem('currentWeek');
+            if (savedWeek) {
+                currentWeek = parseInt(savedWeek);
+                document.getElementById('weekSelector').value = currentWeek;
+            }
+        }
+
+        function updateDateDisplay() {
+            const today = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('dateDisplay').textContent = today.toLocaleDateString('en-US', options);
+        }
+
+        function getDayName(dayIndex) {
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            return days[dayIndex];
+        }
+
+        function loadTodayWorkout() {
+            const dayName = getDayName(currentDay);
+            const todayWorkout = workoutProgram[currentWeek][dayName];
+            const workoutContent = document.getElementById('workoutContent');
+            
+            let html = `<div class="workout-card">
+                <div class="workout-title">${dayName.charAt(0).toUpperCase() + dayName.slice(1)}'s Workout - Week ${currentWeek}</div>`;
+            
+            let exerciseIndex = 0;
+            
+            todayWorkout.forEach((item, mainIndex) => {
+                if (item.card) {
+                    // Movement Card
+                    const card = movementCards[item.card];
+                    const cardId = `card_${mainIndex}`;
+                    
+                    html += `
+                        <div class="movement-card-header" onclick="toggleCard('${cardId}')">
+                            <div>
+                                <div class="exercise-name">${item.name}</div>
+                                <div class="card-progress" id="progress_${cardId}">0 / ${card.prep.length + card.exercises.length} completed</div>
+                            </div>
+                            <span class="expand-icon" id="icon_${cardId}">▶</span>
+                        </div>
+                        <div class="movement-card-content" id="${cardId}">
+                            <div style="margin-top: 10px; color: #ffd700; font-size: 14px; margin-left: 20px;">Movement Prep:</div>`;
+                    
+                    // Add movement prep exercises
+                    card.prep.forEach((exercise, i) => {
+                        const key = `${currentWeek}_${dayName}_${exerciseIndex}`;
+                        const completed = workoutData[key] || false;
+                        html += createExerciseItem(exercise, exerciseIndex, completed, true);
+                        exerciseIndex++;
+                    });
+                    
+                    html += `<div style="margin-top: 10px; color: #ffd700; font-size: 14px; margin-left: 20px;">Exercises:</div>`;
+                    
+                    // Add main exercises
+                    card.exercises.forEach((exercise, i) => {
+                        const key = `${currentWeek}_${dayName}_${exerciseIndex}`;
+                        const completed = workoutData[key] || false;
+                        html += createExerciseItem(exercise, exerciseIndex, completed, true);
+                        exerciseIndex++;
+                    });
+                    
+                    html += `</div>`;
+                    
+                } else if (item.postWorkout) {
+                    // Post Workout Card
+                    const cardId = `post_${mainIndex}`;
+                    
+                    html += `
+                        <div class="movement-card-header" onclick="toggleCard('${cardId}')">
+                            <div>
+                                <div class="exercise-name">${item.name}</div>
+                                <div class="card-progress" id="progress_${cardId}">0 / ${postWorkoutCard.length} completed</div>
+                            </div>
+                            <span class="expand-icon" id="icon_${cardId}">▶</span>
+                        </div>
+                        <div class="movement-card-content" id="${cardId}">`;
+                    
+                    postWorkoutCard.forEach((exercise, i) => {
+                        const key = `${currentWeek}_${dayName}_${exerciseIndex}`;
+                        const completed = workoutData[key] || false;
+                        html += createExerciseItem(exercise, exerciseIndex, completed, true);
+                        exerciseIndex++;
+                    });
+                    
+                    html += `</div>`;
+                    
+                } else {
+                    // Regular exercise
+                    const key = `${currentWeek}_${dayName}_${exerciseIndex}`;
+                    const completed = workoutData[key] || false;
+                    html += createExerciseItem(item, exerciseIndex, completed, false);
+                    exerciseIndex++;
+                }
+            });
+            
+            html += `</div>`;
+            workoutContent.innerHTML = html;
+            
+            // Update progress for cards
+            setTimeout(updateCardProgress, 100);
+        }
+
+        function createExerciseItem(exercise, index, completed, isCard) {
+            return `
+                <div class="exercise-item ${isCard ? 'card-exercise' : ''} ${completed ? 'completed' : ''}" 
+                     onclick="toggleExercise(${index})">
+                    <div>
+                        <div class="exercise-name">${exercise.name}</div>
+                        ${exercise.reps ? `<div class="exercise-details">${exercise.reps}</div>` : ''}
+                        ${exercise.time === true ? `<div class="exercise-details">Track time</div>` : ''}
+                        ${exercise.time && exercise.time !== true ? `<div class="exercise-details">Goal: ${exercise.time}</div>` : ''}
+                        ${exercise.note ? `<div class="exercise-details" style="color: #ffd700;">${exercise.note}</div>` : ''}
+                    </div>
+                    <div class="exercise-controls">
+                        <div class="checkbox ${completed ? 'checked' : ''}"></div>
+                    </div>
+                </div>`;
+        }
+
+        function toggleCard(cardId) {
+            const content = document.getElementById(cardId);
+            const icon = document.getElementById(`icon_${cardId}`);
+            content.classList.toggle('expanded');
+            icon.classList.toggle('expanded');
+        }
+
+        function toggleExercise(index) {
+            const dayName = getDayName(currentDay);
+            const key = `${currentWeek}_${dayName}_${index}`;
+            
+            workoutData[key] = !workoutData[key];
+            localStorage.setItem('marsocWorkouts', JSON.stringify(workoutData));
+            
+            loadTodayWorkout();
+        }
+
+        function updateCardProgress() {
+            const dayName = getDayName(currentDay);
+            const todayWorkout = workoutProgram[currentWeek][dayName];
+            
+            let exerciseIndex = 0;
+            
+            todayWorkout.forEach((item, mainIndex) => {
+                if (item.card) {
+                    const card = movementCards[item.card];
+                    const cardId = `card_${mainIndex}`;
+                    const total = card.prep.length + card.exercises.length;
+                    let completed = 0;
+                    
+                    for (let i = 0; i < total; i++) {
+                        const key = `${currentWeek}_${dayName}_${exerciseIndex}`;
+                        if (workoutData[key]) completed++;
+                        exerciseIndex++;
+                    }
+                    
+                    const progressEl = document.getElementById(`progress_${cardId}`);
+                    if (progressEl) {
+                        progressEl.textContent = `${completed} / ${total} completed`;
+                    }
+                    
+                } else if (item.postWorkout) {
+                    const cardId = `post_${mainIndex}`;
+                    const total = postWorkoutCard.length;
+                    let completed = 0;
+                    
+                    for (let i = 0; i < total; i++) {
+                        const key = `${currentWeek}_${dayName}_${exerciseIndex}`;
+                        if (workoutData[key]) completed++;
+                        exerciseIndex++;
+                    }
+                    
+                    const progressEl = document.getElementById(`progress_${cardId}`);
+                    if (progressEl) {
+                        progressEl.textContent = `${completed} / ${total} completed`;
+                    }
+                    
+                } else {
+                    exerciseIndex++;
+                }
+            });
+        }
+
+        // Timer functions
+        function startTimer() {
+            if (timerInterval) return;
+            
+            timerInterval = setInterval(() => {
+                seconds++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        function resetTimer() {
+            stopTimer();
+            seconds = 0;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            document.getElementById('timerDisplay').textContent = 
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.textContent.toLowerCase().includes(tabName.substring(0, 3))) {
+                    tab.classList.add('active');
+                }
+            });
+        }
+
+        function quickSwitch(tabName) {
+            switchTab(tabName);
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+        }
+
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
