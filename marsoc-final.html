@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>MARSOC Training Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+            overscroll-behavior: none;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 10px;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            padding: 20px;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .week-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .week-selector {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .date-display {
+            font-size: 14px;
+            color: #b0b0b0;
+        }
+
+        .navigation-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding: 5px 0;
+            scrollbar-width: none;
+        }
+
+        .navigation-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .workout-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .workout-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .exercise-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .exercise-item.completed {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+        }
+
+        .exercise-item.card-exercise {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            margin-left: 20px;
+            margin-bottom: 8px;
+        }
+
+        .exercise-item.card-exercise.completed {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+        }
+
+        .exercise-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .exercise-name {
+            flex: 1;
+            font-size: 16px;
+        }
+
+        .exercise-details {
+            font-size: 14px;
+            color: #b0b0b0;
+            margin-top: 5px;
+        }
+
+        .exercise-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .checkbox.checked {
+            background: #667eea;
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 16px;
+        }
+
+        .rep-input {
+            width: 60px;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .movement-card-header {
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .movement-card-content {
+            display: none;
+        }
+
+        .movement-card-content.expanded {
+            display: block;
+        }
+
+        .expand-icon {
+            transition: transform 0.3s;
+        }
+
+        .expand-icon.expanded {
+            transform: rotate(90deg);
+        }
+
+        .calendar-container {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-header {
+            font-weight: bold;
+            text-align: center;
+            padding: 10px 0;
+            color: #667eea;
+            font-size: 12px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .calendar-day.completed {
+            background: rgba(76, 175, 80, 0.3);
+            border-color: #4caf50;
+        }
+
+        .calendar-day.partial {
+            background: rgba(255, 193, 7, 0.3);
+            border-color: #ffc107;
+        }
+
+        .calendar-day.current {
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        .calendar-day.rest {
+            background: rgba(255, 255, 255, 0.02);
+            color: #666;
+        }
+
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .day-label {
+            font-size: 10px;
+            color: #b0b0b0;
+        }
+
+        .completion-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 10px;
+        }
+
+        .daily-summary {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .summary-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 14px;
+        }
+
+        .summary-label {
+            color: #b0b0b0;
+        }
+
+        .summary-value {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .timer-section {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .timer-display {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336, #da190b);
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: #b0b0b0;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.1);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s ease;
+        }
+
+        .card-progress {
+            font-size: 14px;
+            color: #b0b0b0;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .notes-textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            min-height: 100px;
+            resize: vertical;
+            margin-top: 10px;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 15px;
+            margin-top: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #b0b0b0;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MARSOC Training Tracker</h1>
+            <div class="week-info">
+                <select class="week-selector" id="weekSelector">
+                    <option value="1">Week 1</option>
+                    <option value="2">Week 2</option>
+                    <option value="3">Week 3</option>
+                    <option value="4">Week 4</option>
+                    <option value="5">Week 5</option>
+                    <option value="6">Week 6</option>
+                    <option value="7">Week 7</option>
+                    <option value="8">Week 8</option>
+                    <option value="9">Week 9</option>
+                    <option value="10">Week 10</option>
+                </select>
+                <div class="date-display" id="dateDisplay"></div>
+            </div>
+        </div>
+
+        <div class="navigation-tabs">
+            <button class="tab active" onclick="switchTab('today')">Today</button>
+            <button class="tab" onclick="switchTab('calendar')">Calendar</button>
+            <button class="tab" onclick="switchTab('summary')">Summary</button>
+            <button class="tab" onclick="switchTab('timer')">Timer</button>
+        </div>
+
+        <!-- Today's Workout Section -->
+        <div id="today" class="content-section active">
+            <div id="todaySummary"></div>
+            <div id="workoutContent"></div>
+            <div class="workout-card">
+                <div class="workout-title">Workout Notes</div>
+                <textarea class="notes-textarea" id="workoutNotes" placeholder="Add notes about today's workout..."></textarea>
+                <button class="save-btn" onclick="saveWorkout()">Save Workout</button>
+            </div>
+        </div>
+
+        <!-- Calendar Section -->
+        <div id="calendar" class="content-section">
+            <div class="workout-card">
+                <div class="workout-title">Week ${currentWeek} Calendar</div>
+                <div class="calendar-container" id="weekCalendar"></div>
+            </div>
+            <div class="workout-card">
+                <div class="workout-title">10-Week Overview</div>
+                <div class="calendar-container" id="overallCalendar"></div>
+            </div>
+        </div>
+
+        <!-- Summary Section -->
+        <div id="summary" class="content-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalWorkouts">0</div>
+                    <div class="stat-label">Total Workouts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="currentStreak">0</div>
+                    <div class="stat-label">Current Streak</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="weekProgress">0%</div>
+                    <div class="stat-label">Week Progress</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalProgress">0%</div>
+                    <div class="stat-label">Total Progress</div>
+                </div>
+            </div>
+            <div id="weeklySummary"></div>
+        </div>
+
+        <!-- Timer Section -->
+        <div id="timer" class="content-section">
+            <div class="timer-section">
+                <div class="timer-display" id="timerDisplay">00:00:00</div>
+                <div class="timer-controls">
+                    <button class="btn btn-primary" onclick="startTimer()">Start</button>
+                    <button class="btn btn-danger" onclick="stopTimer()">Stop</button>
+                    <button class="btn" onclick="resetTimer()">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="quickSwitch('today')">
+            <span class="nav-icon">💪</span>
+            <span>Today</span>
+        </button>
+        <button class="nav-item" onclick="quickSwitch('calendar')">
+            <span class="nav-icon">📅</span>
+            <span>Calendar</span>
+        </button>
+        <button class="nav-item" onclick="quickSwitch('summary')">
+            <span class="nav-icon">📊</span>
+            <span>Summary</span>
+        </button>
+        <button class="nav-item" onclick="quickSwitch('timer')">
+            <span class="nav-icon">⏱️</span>
+            <span>Timer</span>
+        </button>
+    </div>
+
+    <script>
+        // Movement Card exercises (same as before)
+        const movementCards = {
+            1: {
+                prep: [
+                    { name: "Ankles-Hips-Shoulders", reps: "5 each side (5 count)" },
+                    { name: "Hip bridge", reps: "6" },
+                    { name: "Elbow pushups", reps: "6-8" },
+                    { name: "Birddog", reps: "5 each side" },
+                    { name: "Frog squats", reps: "5" },
+                    { name: "World's greatest stretch", reps: "5 each side" },
+                    { name: "Inchworm", reps: "5" },
+                    { name: "Walking knees", reps: "10 each side" },
+                    { name: "Walking quads", reps: "10 each side" },
+                    { name: "Cradles", reps: "5 each side" },
+                    { name: "Backwards hamstring", reps: "5 each side" },
+                    { name: "High knees", reps: "15 sec" },
+                    { name: "Butt kicks", reps: "15 reps" }
+                ],
+                exercises: [
+                    { name: "Forward Plank", reps: "Hold for 1 minute" },
+                    { name: "Side Plank", reps: "Hold for 30 seconds each side" },
+                    { name: "Push-Ups", reps: "30 reps (2 count)" },
+                    { name: "Side Lunges", reps: "20 reps (alternate legs, 2 count)" },
+                    { name: "Air Squats", reps: "20 reps (2 count, all the way down)" },
+                    { name: "Burpees", reps: "15 reps (6 count)" },
+                    { name: "Side Straddle Hops", reps: "20 reps" },
+                    { name: "Skaters", reps: "30 reps (hold for 2 seconds each leg)" },
+                    { name: "Forward Plank", reps: "Hold for 1 minute" },
+                    { name: "Side Plank", reps: "Hold for 30 seconds each side" },
+                    { name: "Split Jumps", reps: "30 reps (alternate legs, 2 count)" },
+                    { name: "Mountain Climbers", reps: "25 (4 count)" },
+                    { name: "Partner Drags", reps: "4 times, 20 yards each time" },
+                    { name: "Pull-Ups", reps: "2 max sets" }
+                ]
+            },
+            2: {
+                prep: [
+                    { name: "Ankles-Hips-Shoulders", reps: "5 each side (5 count)" },
+                    { name: "Hip bridge", reps: "6" },
+                    { name: "Elbow pushups", reps: "6-8" },
+                    { name: "Birddog", reps: "5 each side" },
+                    { name: "Frog squats", reps: "5" },
+                    { name: "World's greatest stretch", reps: "5 each side" },
+                    { name: "Inchworm", reps: "5" },
+                    { name: "Walking knees", reps: "10 each side" },
+                    { name: "Walking quads", reps: "10 each side" },
+                    { name: "Cradles", reps: "5 each side" },
+                    { name: "Backwards hamstring", reps: "5 each side" },
+                    { name: "High knees", reps: "15 sec" },
+                    { name: "Butt kicks", reps: "15 reps" }
+                ],
+                exercises: [
+                    { name: "Forward Plank", reps: "Hold for 1 minute" },
+                    { name: "Side Plank", reps: "Hold for 30 seconds each side" },
+                    { name: "Push-Ups", reps: "30 reps (2 count)" },
+                    { name: "Lunges w/ rotation to lead leg", reps: "20 reps (each side, 2 count)" },
+                    { name: "Air Squats", reps: "20 reps (2 count, all the way down)" },
+                    { name: "Burpees", reps: "15 reps (6 count)" },
+                    { name: "Side Straddle Hops", reps: "20 reps" },
+                    { name: "Skaters", reps: "30 reps (hold for 2 seconds each leg)" },
+                    { name: "Forward Plank", reps: "Hold for 1 minute" },
+                    { name: "Side Plank", reps: "Hold for 30 seconds each side" },
+                    { name: "Split Jumps", reps: "30 reps (alternate legs, 2 count)" },
+                    { name: "Mountain Climbers", reps: "25 (4 count)" },
+                    { name: "Partner Drags", reps: "4 times, 20 yards each time" },
+                    { name: "Pull-Ups", reps: "2 max sets" }
+                ]
+            },
+            3: {
+                prep: [
+                    { name: "Ankles-Hips-Shoulders", reps: "5 each side (5 count)" },
+                    { name: "Hip bridge", reps: "6" },
+                    { name: "Elbow pushups", reps: "6-8" },
+                    { name: "Birddog", reps: "5 each side" },
+                    { name: "Frog squats", reps: "5" },
+                    { name: "World's greatest stretch", reps: "5 each side" },
+                    { name: "Inchworm", reps: "5" },
+                    { name: "Walking knees", reps: "10 each side" },
+                    { name: "Walking quads", reps: "10 each side" },
+                    { name: "Cradles", reps: "5 each side" },
+                    { name: "Backwards hamstring", reps: "5 each side" },
+                    { name: "High knees", reps: "15 sec" },
+                    { name: "Butt kicks", reps: "15 reps" }
+                ],
+                exercises: [
+                    { name: "Forward Plank", reps: "Hold for 1 minute (2x)" },
+                    { name: "Side Plank", reps: "Hold for 30 seconds each side (2x)" },
+                    { name: "Push-Ups (with ruck)", reps: "20 reps (2 count)" },
+                    { name: "Lunges w/ rotation to lead leg", reps: "10 reps (each side, 2 count)" },
+                    { name: "Ruck Rowing", reps: "20 reps (2 count)" },
+                    { name: "Ruck Thrusters", reps: "15 reps (2 count)" },
+                    { name: "Skaters", reps: "30 reps (each leg, 2 count)" },
+                    { name: "Side Straddle Hops", reps: "20 reps" },
+                    { name: "Split Jumps", reps: "30 reps (alternate legs, 2 count)" },
+                    { name: "Prisoner Jumps", reps: "15 reps" },
+                    { name: "Air Squats with Ruck Overhead", reps: "10 each side (2 count)" },
+                    { name: "20-Yard High Crawl", reps: "4 times" },
+                    { name: "Fireman Carry", reps: "20 yards (switch, repeat 2 times)" },
+                    { name: "Pull-Ups", reps: "2 max sets" }
+                ]
+            },
+            4: {
+                prep: [
+                    { name: "Ankles-Hips-Shoulders", reps: "5 each side (5 count)" },
+                    { name: "Hip bridge", reps: "6" },
+                    { name: "Elbow pushups", reps: "6-8" },
+                    { name: "Birddog", reps: "5 each side" },
+                    { name: "Frog squats", reps: "5" },
+                    { name: "World's greatest stretch", reps: "5 each side" },
+                    { name: "Inchworm", reps: "5" },
+                    { name: "Walking knees", reps: "10 each side" },
+                    { name: "Walking quads", reps: "10 each side" },
+                    { name: "Cradles", reps: "5 each side" },
+                    { name: "Backwards hamstring", reps: "5 each side" },
+                    { name: "High knees", reps: "15 sec" },
+                    { name: "Butt kicks", reps: "15 reps" }
+                ],
+                exercises: [
+                    { name: "Forward Plank", reps: "Hold for 1 minute (2x)" },
+                    { name: "Side Plank", reps: "Hold for 30 seconds each side (2x)" },
+                    { name: "Push-Ups", reps: "35 reps (2 count)" },
+                    { name: "Lunges w/ rotation to lead leg", reps: "30 reps (each side, 2 count)" },
+                    { name: "Burpees", reps: "20 reps (6 count)" },
+                    { name: "Split Jumps", reps: "20 reps (each legs, 2 count)" },
+                    { name: "Mountain Climbers", reps: "25 (4 count)" },
+                    { name: "Side Straddle Hops", reps: "20 reps" },
+                    { name: "Prisoner Jumps", reps: "15 reps" },
+                    { name: "Skaters", reps: "20 reps (hold for 2 seconds each legs)" },
+                    { name: "Forward Plank", reps: "Hold for 1 minute, 5 sec each (2x)" },
+                    { name: "Side Plank", reps: "Hold for 30 seconds, pulse 15 sec (2x)" },
+                    { name: "Partner Drags", reps: "2 times, 20-yards each" }
+                ]
+            }
+        };
+
+        const postWorkoutCard = [
+            { name: "AIS: Calf", reps: "Pull, Relax, 1-10 (each side)" },
+            { name: "AIS: Hamstring", reps: "Pull, Relax, 1-10 (each side)" },
+            { name: "AIS: IT Band", reps: "Pull, Relax, 1-10 (each side)" },
+            { name: "AIS: Groin", reps: "Pull, Relax, 1-10 (each side)" },
+            { name: "AIS: Quadriceps", reps: "Up, Pull, Relax 1-10 (each side)" },
+            { name: "AIS: Triceps", reps: "Down, Relax, 1-10 (both sides)" },
+            { name: "AIS: Rotator Cuff", reps: "Down, Back, 1-10 (both sides)" },
+            { name: "AIS: Quadruped Thoracic Spine", reps: "Count on your own" },
+            { name: "AIS: Middle Back", reps: "Up, Back, 1-10" }
+        ];
+
+        // Simplified workout program
+        const workoutProgram = {
+            1: {
+                monday: [
+                    { name: "3-mile run", time: true },
+                    { name: "Movement Card #1", card: 1 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                tuesday: [
+                    { name: "3-mile hike", time: "1 hr or less" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                wednesday: [
+                    { name: "Swim 8 x 100s", reps: "Technique focus" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                thursday: [
+                    { name: "Run 4 x 400m", reps: "Mile pace, 2 min rest" },
+                    { name: "Movement Card #1", card: 1 },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                friday: [
+                    { name: "Swim 600m", reps: "Work on technique" },
+                    { name: "3 x 5 min tread", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                saturday: [
+                    { name: "4-mile hike", time: "1:20 or less" },
+                    { name: "Assess feet/gear", reps: "Complete" },
+                    { name: "Post workout card", postWorkout: true }
+                ],
+                sunday: [
+                    { name: "Rest, stretch, hydrate & recover", reps: "Active recovery" }
+                ]
+            }
+        };
+
+        // Copy structure for all weeks
+        for (let i = 2; i <= 10; i++) {
+            workoutProgram[i] = JSON.parse(JSON.stringify(workoutProgram[1]));
+        }
+
+        // State management
+        let currentWeek = 1;
+        let currentDay = new Date().getDay();
+        let timerInterval = null;
+        let seconds = 0;
+        let workoutData = JSON.parse(localStorage.getItem('marsocWorkouts')) || {};
+        let expandedCards = JSON.parse(localStorage.getItem('expandedCards')) || {};
+
+        // Initialize app
+        function init() {
+            loadCurrentWeek();
+            updateDateDisplay();
+            loadTodayWorkout();
+            loadCalendars();
+            loadSummary();
+            
+            document.getElementById('weekSelector').addEventListener('change', function(e) {
+                currentWeek = parseInt(e.target.value);
+                localStorage.setItem('currentWeek', currentWeek);
+                loadTodayWorkout();
+                loadCalendars();
+                loadSummary();
+            });
+        }
+
+        function loadCurrentWeek() {
+            const savedWeek = localStorage.getItem('currentWeek');
+            if (savedWeek) {
+                currentWeek = parseInt(savedWeek);
+                document.getElementById('weekSelector').value = currentWeek;
+            }
+        }
+
+        function updateDateDisplay() {
+            const today = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('dateDisplay').textContent = today.toLocaleDateString('en-US', options);
+        }
+
+        function getDayName(dayIndex) {
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            return days[dayIndex];
+        }
+
+        function loadTodayWorkout() {
+            const dayName = getDayName(currentDay);
+            const todayWorkout = workoutProgram[currentWeek][dayName];
+            
+            // Load today's summary
+            loadTodaySummary();
+            
+            const workoutContent = document.getElementById('workoutContent');
+            let html = `<div class="workout-card">
+                <div class="workout-title">${dayName.charAt(0).toUpperCase() + dayName.slice(1)}'s Workout - Week ${currentWeek}</div>`;
+            
+            let exerciseIndex = 0;
+            
+            todayWorkout.forEach((item, mainIndex) => {
+                if (item.card) {
+                    const card = movementCards[item.card];
+                    const cardId = `card_${mainIndex}`;
+                    const isExpanded = expandedCards[cardId] || false;
+                    
+                    html += `
+                        <div class="movement-card-header" onclick="toggleCard('${cardId}')">
+                            <div>
+                                <div class="exercise-name">${item.name}</div>
+                                <div class="card-progress" id="progress_${cardId}">Calculating...</div>
+                            </div>
+                            <span class="expand-icon ${isExpanded ? 'expanded' : ''}" id="icon_${cardId}">▶</span>
+                        </div>
+                        <div class="movement-card-content ${isExpanded ? 'expanded' : ''}" id="${cardId}">
+                            <div style="margin-top: 10px; color: #ffd700; font-size: 14px; margin-left: 20px;">Movement Prep:</div>`;
+                    
+                    card.prep.forEach((exercise) => {
+                        html += createExerciseItem(exercise, exerciseIndex++, true);
+                    });
+                    
+                    html += `<div style="margin-top: 10px; color: #ffd700; font-size: 14px; margin-left: 20px;">Exercises:</div>`;
+                    
+                    card.exercises.forEach((exercise) => {
+                        html += createExerciseItem(exercise, exerciseIndex++, true);
+                    });
+                    
+                    html += `</div>`;
+                    
+                } else if (item.postWorkout) {
+                    const cardId = `post_${mainIndex}`;
+                    const isExpanded = expandedCards[cardId] || false;
+                    
+                    html += `
+                        <div class="movement-card-header" onclick="toggleCard('${cardId}')">
+                            <div>
+                                <div class="exercise-name">${item.name}</div>
+                                <div class="card-progress" id="progress_${cardId}">Calculating...</div>
+                            </div>
+                            <span class="expand-icon ${isExpanded ? 'expanded' : ''}" id="icon_${cardId}">▶</span>
+                        </div>
+                        <div class="movement-card-content ${isExpanded ? 'expanded' : ''}" id="${cardId}">`;
+                    
+                    postWorkoutCard.forEach((exercise) => {
+                        html += createExerciseItem(exercise, exerciseIndex++, true);
+                    });
+                    
+                    html += `</div>`;
+                    
+                } else {
+                    html += createExerciseItem(item, exerciseIndex++, false);
+                }
+            });
+            
+            html += `</div>`;
+            workoutContent.innerHTML = html;
+            
+            // Load saved notes
+            const notesKey = `notes_${currentWeek}_${dayName}`;
+            const savedNotes = localStorage.getItem(notesKey) || '';
+            document.getElementById('workoutNotes').value = savedNotes;
+            
+            setTimeout(updateCardProgress, 100);
+        }
+
+        function createExerciseItem(exercise, index, isCard) {
+            const dayName = getDayName(currentDay);
+            const checkKey = `check_${currentWeek}_${dayName}_${index}`;
+            const repsKey = `reps_${currentWeek}_${dayName}_${index}`;
+            
+            const isChecked = workoutData[checkKey] || false;
+            const savedReps = workoutData[repsKey] || '';
+            
+            return `
+                <div class="exercise-item ${isCard ? 'card-exercise' : ''} ${isChecked ? 'completed' : ''}">
+                    <div style="flex: 1;">
+                        <div class="exercise-header">
+                            <div class="exercise-name">${exercise.name}</div>
+                            <div class="exercise-controls">
+                                <input type="text" 
+                                       class="rep-input" 
+                                       placeholder="Reps" 
+                                       value="${savedReps}"
+                                       onchange="saveReps(${index}, this.value)"
+                                       onclick="event.stopPropagation()">
+                                <div class="checkbox ${isChecked ? 'checked' : ''}" 
+                                     onclick="toggleExercise(${index}); event.stopPropagation();"></div>
+                            </div>
+                        </div>
+                        ${exercise.reps ? `<div class="exercise-details">Target: ${exercise.reps}</div>` : ''}
+                        ${exercise.time === true ? `<div class="exercise-details">Track time</div>` : ''}
+                        ${exercise.time && exercise.time !== true ? `<div class="exercise-details">Goal: ${exercise.time}</div>` : ''}
+                        ${exercise.note ? `<div class="exercise-details" style="color: #ffd700;">${exercise.note}</div>` : ''}
+                    </div>
+                </div>`;
+        }
+
+        function toggleCard(cardId) {
+            const content = document.getElementById(cardId);
+            const icon = document.getElementById(`icon_${cardId}`);
+            const isExpanded = content.classList.contains('expanded');
+            
+            if (isExpanded) {
+                content.classList.remove('expanded');
+                icon.classList.remove('expanded');
+                expandedCards[cardId] = false;
+            } else {
+                content.classList.add('expanded');
+                icon.classList.add('expanded');
+                expandedCards[cardId] = true;
+            }
+            
+            localStorage.setItem('expandedCards', JSON.stringify(expandedCards));
+        }
+
+        function toggleExercise(index) {
+            const dayName = getDayName(currentDay);
+            const checkKey = `check_${currentWeek}_${dayName}_${index}`;
+            
+            workoutData[checkKey] = !workoutData[checkKey];
+            localStorage.setItem('marsocWorkouts', JSON.stringify(workoutData));
+            
+            loadTodayWorkout();
+            loadCalendars();
+            loadSummary();
+        }
+
+        function saveReps(index, value) {
+            const dayName = getDayName(currentDay);
+            const repsKey = `reps_${currentWeek}_${dayName}_${index}`;
+            
+            workoutData[repsKey] = value;
+            localStorage.setItem('marsocWorkouts', JSON.stringify(workoutData));
+        }
+
+        function saveWorkout() {
+            const dayName = getDayName(currentDay);
+            const notesKey = `notes_${currentWeek}_${dayName}`;
+            const notes = document.getElementById('workoutNotes').value;
+            
+            localStorage.setItem(notesKey, notes);
+            
+            // Mark workout as saved for the day
+            const dateKey = `date_${currentWeek}_${dayName}`;
+            workoutData[dateKey] = new Date().toISOString();
+            localStorage.setItem('marsocWorkouts', JSON.stringify(workoutData));
+            
+            alert('Workout saved!');
+            loadCalendars();
+            loadSummary();
+        }
+
+        function updateCardProgress() {
+            const dayName = getDayName(currentDay);
+            const todayWorkout = workoutProgram[currentWeek][dayName];
+            
+            let exerciseIndex = 0;
+            
+            todayWorkout.forEach((item, mainIndex) => {
+                if (item.card) {
+                    const card = movementCards[item.card];
+                    const cardId = `card_${mainIndex}`;
+                    const total = card.prep.length + card.exercises.length;
+                    let completed = 0;
+                    
+                    for (let i = 0; i < total; i++) {
+                        const checkKey = `check_${currentWeek}_${dayName}_${exerciseIndex}`;
+                        if (workoutData[checkKey]) completed++;
+                        exerciseIndex++;
+                    }
+                    
+                    const progressEl = document.getElementById(`progress_${cardId}`);
+                    if (progressEl) {
+                        progressEl.textContent = `${completed} / ${total} completed`;
+                    }
+                    
+                } else if (item.postWorkout) {
+                    const cardId = `post_${mainIndex}`;
+                    const total = postWorkoutCard.length;
+                    let completed = 0;
+                    
+                    for (let i = 0; i < total; i++) {
+                        const checkKey = `check_${currentWeek}_${dayName}_${exerciseIndex}`;
+                        if (workoutData[checkKey]) completed++;
+                        exerciseIndex++;
+                    }
+                    
+                    const progressEl = document.getElementById(`progress_${cardId}`);
+                    if (progressEl) {
+                        progressEl.textContent = `${completed} / ${total} completed`;
+                    }
+                    
+                } else {
+                    exerciseIndex++;
+                }
+            });
+        }
+
+        function loadTodaySummary() {
+            const dayName = getDayName(currentDay);
+            const todayWorkout = workoutProgram[currentWeek][dayName];
+            
+            let totalExercises = 0;
+            let completedExercises = 0;
+            
+            let exerciseIndex = 0;
+            todayWorkout.forEach(item => {
+                if (item.card) {
+                    const card = movementCards[item.card];
+                    const total = card.prep.length + card.exercises.length;
+                    for (let i = 0; i < total; i++) {
+                        totalExercises++;
+                        const checkKey = `check_${currentWeek}_${dayName}_${exerciseIndex}`;
+                        if (workoutData[checkKey]) completedExercises++;
+                        exerciseIndex++;
+                    }
+                } else if (item.postWorkout) {
+                    const total = postWorkoutCard.length;
+                    for (let i = 0; i < total; i++) {
+                        totalExercises++;
+                        const checkKey = `check_${currentWeek}_${dayName}_${exerciseIndex}`;
+                        if (workoutData[checkKey]) completedExercises++;
+                        exerciseIndex++;
+                    }
+                } else {
+                    totalExercises++;
+                    const checkKey = `check_${currentWeek}_${dayName}_${exerciseIndex}`;
+                    if (workoutData[checkKey]) completedExercises++;
+                    exerciseIndex++;
+                }
+            });
+            
+            const percentage = totalExercises > 0 ? Math.round((completedExercises / totalExercises) * 100) : 0;
+            
+            const summaryHtml = `
+                <div class="daily-summary">
+                    <div class="summary-title">Today's Progress</div>
+                    <div class="summary-item">
+                        <span class="summary-label">Exercises Completed</span>
+                        <span class="summary-value">${completedExercises} / ${totalExercises}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Completion</span>
+                        <span class="summary-value">${percentage}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${percentage}%"></div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('todaySummary').innerHTML = summaryHtml;
+        }
+
+        function loadCalendars() {
+            // Week calendar
+            const weekCalendar = document.getElementById('weekCalendar');
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            
+            let weekHtml = '';
+            days.forEach(day => {
+                weekHtml += `<div class="calendar-header">${day}</div>`;
+            });
+            
+            for (let d = 0; d < 7; d++) {
+                const dayName = getDayName(d);
+                const isToday = d === currentDay;
+                const isRest = d === 0; // Sunday is rest day
+                
+                const completion = getWorkoutCompletion(currentWeek, dayName);
+                let statusClass = '';
+                let indicator = '';
+                
+                if (completion === 100) {
+                    statusClass = 'completed';
+                    indicator = '✓';
+                } else if (completion > 0) {
+                    statusClass = 'partial';
+                    indicator = `${completion}%`;
+                }
+                
+                if (isRest) statusClass += ' rest';
+                if (isToday) statusClass += ' current';
+                
+                weekHtml += `
+                    <div class="calendar-day ${statusClass}" onclick="viewDay(${currentWeek}, ${d})">
+                        <div class="day-number">${days[d]}</div>
+                        <div class="day-label">W${currentWeek}</div>
+                        ${indicator ? `<div class="completion-indicator">${indicator}</div>` : ''}
+                    </div>
+                `;
+            }
+            
+            weekCalendar.innerHTML = weekHtml;
+            
+            // Overall calendar
+            const overallCalendar = document.getElementById('overallCalendar');
+            let overallHtml = '';
+            
+            // Headers
+            days.forEach(day => {
+                overallHtml += `<div class="calendar-header">${day}</div>`;
+            });
+            
+            // 10 weeks
+            for (let w = 1; w <= 10; w++) {
+                for (let d = 0; d < 7; d++) {
+                    const dayName = getDayName(d);
+                    const isToday = w === currentWeek && d === currentDay;
+                    const isRest = d === 0;
+                    
+                    const completion = getWorkoutCompletion(w, dayName);
+                    let statusClass = '';
+                    let indicator = '';
+                    
+                    if (completion === 100) {
+                        statusClass = 'completed';
+                        indicator = '✓';
+                    } else if (completion > 0) {
+                        statusClass = 'partial';
+                    }
+                    
+                    if (isRest) statusClass += ' rest';
+                    if (isToday) statusClass += ' current';
+                    
+                    overallHtml += `
+                        <div class="calendar-day ${statusClass}" onclick="viewDay(${w}, ${d})">
+                            <div class="day-number">W${w}</div>
+                            <div class="day-label">${days[d].substring(0, 1)}</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            overallCalendar.innerHTML = overallHtml;
+        }
+
+        function getWorkoutCompletion(week, dayName) {
+            const workout = workoutProgram[week][dayName];
+            if (!workout) return 0;
+            
+            let totalExercises = 0;
+            let completedExercises = 0;
+            let exerciseIndex = 0;
+            
+            workout.forEach(item => {
+                if (item.card) {
+                    const card = movementCards[item.card];
+                    const total = card.prep.length + card.exercises.length;
+                    for (let i = 0; i < total; i++) {
+                        totalExercises++;
+                        const checkKey = `check_${week}_${dayName}_${exerciseIndex}`;
+                        if (workoutData[checkKey]) completedExercises++;
+                        exerciseIndex++;
+                    }
+                } else if (item.postWorkout) {
+                    const total = postWorkoutCard.length;
+                    for (let i = 0; i < total; i++) {
+                        totalExercises++;
+                        const checkKey = `check_${week}_${dayName}_${exerciseIndex}`;
+                        if (workoutData[checkKey]) completedExercises++;
+                        exerciseIndex++;
+                    }
+                } else {
+                    totalExercises++;
+                    const checkKey = `check_${week}_${dayName}_${exerciseIndex}`;
+                    if (workoutData[checkKey]) completedExercises++;
+                    exerciseIndex++;
+                }
+            });
+            
+            return totalExercises > 0 ? Math.round((completedExercises / totalExercises) * 100) : 0;
+        }
+
+        function viewDay(week, day) {
+            currentWeek = week;
+            currentDay = day;
+            document.getElementById('weekSelector').value = week;
+            localStorage.setItem('currentWeek', week);
+            loadTodayWorkout();
+            loadCalendars();
+            loadSummary();
+            switchTab('today');
+        }
+
+        function loadSummary() {
+            // Calculate total workouts
+            let totalWorkouts = 0;
+            let completedWorkouts = 0;
+            
+            for (let w = 1; w <= 10; w++) {
+                for (let d = 1; d < 7; d++) { // Skip Sunday (rest day)
+                    totalWorkouts++;
+                    const dayName = getDayName(d);
+                    const completion = getWorkoutCompletion(w, dayName);
+                    if (completion === 100) completedWorkouts++;
+                }
+            }
+            
+            document.getElementById('totalWorkouts').textContent = completedWorkouts;
+            document.getElementById('totalProgress').textContent = Math.round((completedWorkouts / totalWorkouts) * 100) + '%';
+            
+            // Calculate week progress
+            let weekWorkouts = 0;
+            let weekCompleted = 0;
+            for (let d = 1; d < 7; d++) {
+                weekWorkouts++;
+                const dayName = getDayName(d);
+                const completion = getWorkoutCompletion(currentWeek, dayName);
+                if (completion === 100) weekCompleted++;
+            }
+            
+            document.getElementById('weekProgress').textContent = Math.round((weekCompleted / weekWorkouts) * 100) + '%';
+            
+            // Calculate streak
+            let streak = 0;
+            const today = new Date();
+            let checkDate = new Date(today);
+            
+            while (true) {
+                const weekNum = currentWeek; // Simplified for example
+                const dayNum = checkDate.getDay();
+                const dayName = getDayName(dayNum);
+                
+                if (dayNum === 0) { // Skip Sundays
+                    checkDate.setDate(checkDate.getDate() - 1);
+                    continue;
+                }
+                
+                const completion = getWorkoutCompletion(weekNum, dayName);
+                if (completion === 100) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else {
+                    break;
+                }
+            }
+            
+            document.getElementById('currentStreak').textContent = streak;
+            
+            // Weekly summary
+            let summaryHtml = '<div class="workout-card"><div class="workout-title">This Week\'s Details</div>';
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            
+            days.forEach((day, index) => {
+                const dayName = day.toLowerCase();
+                const completion = getWorkoutCompletion(currentWeek, dayName);
+                const isRest = index === 0;
+                
+                summaryHtml += `
+                    <div class="summary-item">
+                        <span class="summary-label">${day}</span>
+                        <span class="summary-value">${isRest ? 'Rest Day' : completion + '% Complete'}</span>
+                    </div>
+                `;
+            });
+            
+            summaryHtml += '</div>';
+            document.getElementById('weeklySummary').innerHTML = summaryHtml;
+        }
+
+        // Timer functions
+        function startTimer() {
+            if (timerInterval) return;
+            
+            timerInterval = setInterval(() => {
+                seconds++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        function resetTimer() {
+            stopTimer();
+            seconds = 0;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            document.getElementById('timerDisplay').textContent = 
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.textContent.toLowerCase() === tabName) {
+                    tab.classList.add('active');
+                }
+            });
+        }
+
+        function quickSwitch(tabName) {
+            switchTab(tabName);
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+        }
+
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
